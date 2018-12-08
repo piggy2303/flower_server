@@ -5,6 +5,8 @@ const app = express();
 
 const port = process.env.PORT;
 
+app.set('port', process.env.PORT || 5000);
+
 app.use(express.json());
 
 const data = [
@@ -65,6 +67,10 @@ app.get('/python', (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`on ${port}`);
+// app.listen(port, () => {
+//   console.log(`on ${port}`);
+// });
+
+app.listen(app.get('port'), () => {
+  console.log('Node server is running on port ' + app.get('port'));
 });
