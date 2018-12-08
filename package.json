@@ -3,5 +3,11 @@
     "express": "^4.16.4",
     "joi": "^14.0.1",
     "python-shell": "^1.0.6"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": "8.14.0"
   }
 }
