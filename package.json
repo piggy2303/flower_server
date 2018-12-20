@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "express": "^4.16.4",
+    "firebase-tools": "^6.1.2",
     "joi": "^14.0.1",
     "python-shell": "^1.0.6"
   },
