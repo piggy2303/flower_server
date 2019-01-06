@@ -2,12 +2,29 @@ const { PythonShell } = require('python-shell');
 const express = require('express');
 const Joi = require('joi');
 const app = express();
-
-const port = process.env.PORT;
-
-app.set('port', process.env.PORT || 5000);
+const fs = require('fs');
+const bodyParser = require('body-parser');
+const formidableMiddleware = require('express-formidable');
 
 app.use(express.json());
+app.use(formidableMiddleware());
+
+const port = process.env.PORT;
+app.set('port', process.env.PORT || 5000);
+
+app.use(
+  bodyParser.json({
+    limit: '50mb',
+    extended: true,
+  }),
+);
+
+app.use(
+  bodyParser.urlencoded({
+    limit: '50mb',
+    extended: true,
+  }),
+);
 
 const data = [
   { id: 1, name: 'tuan' },
@@ -44,15 +61,20 @@ app.post('/api/demo', (req, res) => {
     res.status(400).send(validation.error);
     return;
   }
-
   const datanew = {
     id: data.length + 1,
     name: req.body.name,
   };
-
   data.push(datanew);
-
   res.send(datanew);
+});
+
+app.post('/api/upload', (req, res) => {
+  fs.writeFile('./myFile/out.jpg', req.body.name, 'base64', err => {
+    console.log(err);
+  });
+
+  res.end('done');
 });
 
 app.get('/python', (req, res) => {
@@ -66,10 +88,6 @@ app.get('/python', (req, res) => {
     res.send(data);
   });
 });
-
-// app.listen(port, () => {
-//   console.log(`on ${port}`);
-// });
 
 app.listen(app.get('port'), () => {
   console.log('Node server is running on port ' + app.get('port'));
