@@ -4,27 +4,27 @@ const Joi = require('joi');
 const app = express();
 const fs = require('fs');
 const bodyParser = require('body-parser');
-const formidableMiddleware = require('express-formidable');
+// const formidableMiddleware = require('express-formidable');
 
 app.use(express.json());
-app.use(formidableMiddleware());
+// app.use(formidableMiddleware());
 
 const port = process.env.PORT;
 app.set('port', process.env.PORT || 5000);
 
-app.use(
-  bodyParser.json({
-    limit: '50mb',
-    extended: true,
-  }),
-);
+// app.use(
+//   bodyParser.json({
+//     limit: '50mb',
+//     extended: true,
+//   }),
+// );
 
-app.use(
-  bodyParser.urlencoded({
-    limit: '50mb',
-    extended: true,
-  }),
-);
+// app.use(
+//   bodyParser.urlencoded({
+//     limit: '50mb',
+//     extended: true,
+//   }),
+// );
 
 const data = [
   { id: 1, name: 'tuan' },
@@ -73,7 +73,6 @@ app.post('/api/upload', (req, res) => {
   fs.writeFile('./myFile/out.jpg', req.body.name, 'base64', err => {
     console.log(err);
   });
-
   res.end('done');
 });
 
