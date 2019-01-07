@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
 
+router.use(express.json());
+
 const data = [
   { id: 1, name: 'tuan' },
   { id: 2, name: 'tuan2' },
