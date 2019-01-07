@@ -1,14 +1,36 @@
-const express = require('express');
-const router = express.Router();
-const Joi = require('joi');
+import express from 'express';
+import fs from 'fs';
+import { PythonShell } from 'python-shell';
+const app = express.Router();
 
-router.use(express.json());
+app.use(express.json());
 
-router.post('/api/upload', (req, res) => {
-  fs.writeFile('./myFile/out.jpg', req.body.name, 'base64', err => {
-    console.log('error: ', err);
+app.post('/', async (req, res) => {
+  await fs.writeFile('./uploadFolder/out.jpg', req.body.name, 'base64', err => {
+    if (err) throw err;
+    console.log('The file has been saved!');
+
+    let options = {
+      mode: 'text',
+      scriptPath: 'python',
+      args: ['value1', 'value2', 'value3'],
+    };
+
+    let pyshell = new PythonShell('demo.py', options);
+
+    pyshell.on('message', message => {
+      // received a message sent from the Python script (a simple "print" statement)
+      console.log(message);
+      res.end(message);
+    });
+
+    pyshell.end((err, code, signal) => {
+      if (err) throw err;
+      console.log('The exit code was: ' + code);
+      console.log('The exit signal was: ' + signal);
+      console.log('finished');
+    });
   });
-  res.end('done');
 });
 
-module.exports = router;
+module.exports = app;

@@ -1,11 +1,11 @@
-const express = require('express');
-const Joi = require('joi');
-const app = express();
-const fs = require('fs');
-const demo = require('./api/demo');
+import express from 'express';
+import Joi from 'joi';
+import fs from 'fs';
+import bodyParser from 'body-parser';
+import demo from './api/demo';
 import upload from './api/upload';
-const bodyParser = require('body-parser');
 
+const app = express();
 const port = process.env.PORT;
 app.set('port', port || 5000);
 
