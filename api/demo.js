@@ -1,7 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const Joi = require('joi');
+import express from 'express';
+import Joi from 'joi';
+import path from 'path';
 
+const router = express.Router();
 router.use(express.json());
 
 const data = [
@@ -11,7 +12,7 @@ const data = [
 ];
 
 router.get('/', (req, res) => {
-  res.send([1, 2, 3]);
+  res.sendFile(path.resolve('./uploadFolder/Zebras.jpg'));
 });
 
 router.get('/:id1', (req, res) => {

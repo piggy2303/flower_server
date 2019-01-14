@@ -1,12 +1,14 @@
 {
   "dependencies": {
+    "axios": "^0.18.0",
     "babel-preset-env": "^1.7.0",
     "babel-register": "^6.26.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "express-formidable": "^1.2.0",
     "joi": "^14.0.1",
-    "python-shell": "^1.0.6"
+    "python-shell": "^1.0.6",
+    "redis": "^2.8.0"
   },
   "scripts": {
     "start": "nodemon --exec babel-node index.js"
