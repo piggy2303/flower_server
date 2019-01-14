@@ -3,3 +3,4 @@ python/102labels/images
 *.pyc
 *.pickle
 imageFlower/
+package-lock.json
