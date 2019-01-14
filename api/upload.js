@@ -1,16 +1,17 @@
 import express from 'express';
 import fs from 'fs';
 import Axios from 'axios';
-const app = express.Router();
+import { processData } from './func';
+import { error, success } from './defaultRespone';
 
-// app.use(express.json());
+const app = express.Router();
 
 app.get('/', (req, res) => {
   res.send('upload');
 });
 
 app.post('/', async (req, res) => {
-  await fs.writeFile('./python/demo/out.jpg', req.body.name, 'base64', err => {
+  await fs.writeFile('./python/demo/out.jpg', req.body.image, 'base64', err => {
     if (err) throw err;
     console.log('The file has been saved!');
   });
@@ -19,10 +20,9 @@ app.post('/', async (req, res) => {
     .then(response => {
       // handle success
       console.log(response.data);
-      const result = {
-        retrival: response.data,
-      };
-      res.send(result);
+
+      const arrPreprocessing = processData(response.data);
+      res.send(success(arrPreprocessing));
     })
     .catch(error => {
       // handle error

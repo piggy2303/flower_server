@@ -5,6 +5,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from django.http import HttpResponse
+from django.http import JsonResponse
 
 
 from sklearn.neighbors import NearestNeighbors, KNeighborsClassifier
@@ -79,14 +80,17 @@ def knn(all_feature_data, all_label,feature_test):
     result =[]
     for i in indices[0]:
         result.append(all_label[i])
-    return  [result]
+    return  [result,indices[0]]
     
 
 all_feature_data = load_feature()
 all_label = load_label()
 
 def index(request):
-    if request.method == 'GET':     
-        return HttpResponse(knn(all_feature_data, all_label,get_feature_1_image("out")))
+    if request.method == 'GET':
+        feature_image_upload = get_feature_1_image("out")
+        response = knn(all_feature_data, all_label,feature_image_upload)
+
+        return HttpResponse(response)
 
     return HttpResponse("hello")
