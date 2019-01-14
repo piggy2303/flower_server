@@ -1,1 +1,5 @@
 node_modules/
+python/102labels/images
+*.pyc
+*.pickle
+imageFlower/
