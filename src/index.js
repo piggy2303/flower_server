@@ -3,25 +3,76 @@ import Joi from 'joi';
 import fs from 'fs';
 import bodyParser from 'body-parser';
 import demo from './route/demo';
-import upload from '.route/upload';
+import upload from './route/upload';
 import image from './route/image';
-// import mongodb from 'mongodb';
-// import assert from 'assert';
-// const MongoClient = mongodb.MongoClient();
+import mongo from 'mongodb';
+import assert from 'assert';
+import { MONGODB_URL, DATABASE_NAME } from './constant/DATABASE';
 
-// const url_mongodb = 'mongodb://localhost:27017';
-// const dbName = 'flower';
-// // MongoClient.connect(
-// //   url_mongodb,
-// //   (err, client) => {
-// //     assert.equal(null, err);
-// //     console.log('Connected successfully to server');
+// mongo.connect(
+//   MONGODB_URL,
+//   { useNewUrlParser: true },
+//   (err, database) => {
+//     assert.equal(null, err);
+//     console.log('Connected successfully to server');
+//     const db = database.db(DATABASE_NAME);
 
-// //     const db = client.db(dbName);
+//     insertOne(db, () => console.log('done'));
+//   },
+// );
 
-// //     client.close();
-// //   },
-// // );
+const insertOne = (db, callback) => {
+  // Get the documents collection
+  const collection = db.collection('documents');
+  // Insert some documents
+  collection.insertOne({ a: 1 }, (err, result) => {
+    assert.equal(err, null);
+    assert.equal(1, result.result.n);
+    assert.equal(1, result.ops.length);
+    console.log('Inserted done');
+    callback(result);
+  });
+};
+
+const insertDocuments = (db, callback) => {
+  // Get the documents collection
+  const collection = db.collection('documents');
+  // Insert some documents
+  collection.insertMany(
+    [{ a: 1 }, { a: 2, name: 'hah' }, { a: 3 }],
+    (err, result) => {
+      assert.equal(err, null);
+      assert.equal(3, result.result.n);
+      assert.equal(3, result.ops.length);
+      console.log('Inserted 3 documents into the collection');
+      callback(result);
+    },
+  );
+};
+
+const findDocuments = (db, callback) => {
+  // Get the documents collection
+  const collection = db.collection('documents');
+  // Find some documents
+  collection.find({ name: 'hah' }).toArray((err, docs) => {
+    assert.equal(err, null);
+    console.log('Found the following records');
+    console.log(docs);
+    callback(docs);
+  });
+};
+
+const updateDocument = (db, callback) => {
+  // Get the documents collection
+  const collection = db.collection('documents');
+  // Update document where a is 2, set b equal to 1
+  collection.updateOne({ a: 2 }, { $set: { b: 1 } }, (err, result) => {
+    assert.equal(err, null);
+    assert.equal(1, result.result.n);
+    console.log('Updated the document with the field a equal to 2');
+    callback(result);
+  });
+};
 
 const app = express();
 const port = process.env.PORT;

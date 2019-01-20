@@ -1,14 +1,10 @@
 import express from 'express';
 import fs from 'fs';
 import Axios from 'axios';
-import { processData, findImageByIndex } from './func';
+import { processData } from './func';
 import { error, success } from './defaultRespone';
 
 const app = express.Router();
-
-// processData(
-//   "['76', '78', '37', '78', '85', '75', '73', '73', '75', '86'][5613 5913 2111 2021 6659 5486 7767 5196 2755 6760]",
-// );
 
 app.get('/', (req, res) => {
   res.send('upload');

@@ -24,7 +24,6 @@ const processData = data => {
   const indicesInterger = lodash.compact(indicesInterger_raw);
 
   // lodash.compact
-
   // lay ra arr chua cac phan tu uniqe
   const unique = lodash.uniq(labelInterger);
   console.log(unique);
@@ -39,11 +38,8 @@ const processData = data => {
         })
       ];
 
-    const value = findImageByIndex(indexOfImage);
-    const link_image = (LOCALHOST + '/api/image/null').toString();
-
     result.push({
-      link_image: link_image,
+      link_image: indexOfImage,
       name: 'flower index' + item,
       detail: 'detail',
       accuracy: 25,
@@ -106,8 +102,4 @@ const merge = (array, accuracy) => {
   return array;
 };
 
-const findImageByIndex = index => {
-  return 'image_06746.jpg';
-};
-
-export { processData, findImageByIndex };
+export { processData };
