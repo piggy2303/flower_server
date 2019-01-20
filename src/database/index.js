@@ -18,7 +18,7 @@ const insertOneDocument = (db, document, dataInsert, callback) => {
   collection.insertOne(dataInsert, (err, result) => {
     assert.equal(err, null);
     console.log('Inserted success');
-    callback(result);
+    callback(assert.equal(err, null));
   });
 };
 
