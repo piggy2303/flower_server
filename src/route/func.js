@@ -39,7 +39,7 @@ const processData = data => {
       ];
 
     result.push({
-      link_image: indexOfImage,
+      link_image: LOCALHOST + '/api/image/id/' + indexOfImage,
       name: 'flower index' + item,
       detail: 'detail',
       accuracy: 25,
