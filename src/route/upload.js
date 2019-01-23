@@ -13,6 +13,7 @@ import {
 } from '../constant/DATABASE';
 import { findDocuments, insertOneDocument } from '../database';
 import Moment from 'moment';
+import { PYTHON_SERVER } from '../constant/URL';
 const moment = Moment();
 
 const app = express.Router();
@@ -56,7 +57,7 @@ app.post('/', async (req, res) => {
     },
   );
 
-  await Axios.get('http://localhost:8000/demo/')
+  await Axios.get(PYTHON_SERVER)
     .then(response => {
       // handle success
       console.log(response.data);

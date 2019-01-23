@@ -1,10 +1,10 @@
 import express from 'express';
 import fs from 'fs';
 import Axios from 'axios';
-import path from 'path';
 import Joi from 'joi';
 
-import { error } from './defaultRespone';
+import path from 'path';
+import { error, success } from './defaultRespone';
 // import moduleName from '../../assets/imageFlower';
 
 import mongo from 'mongodb';
@@ -13,35 +13,17 @@ import {
   MONGODB_URL,
   DATABASE_NAME,
   COLLECTION_LIST_ALL_IMAGE,
+  COLLECTION_FLOWER_DETAIL,
 } from '../constant/DATABASE';
 import { findDocuments } from '../database';
 
 const app = express.Router();
 
-app.get('/:path', (req, res) => {
-  const schema = {
-    path: Joi.string().required(),
-  };
-
-  const validation = Joi.validate(req.params, schema);
-  if (validation.error) {
-    res.send(error(validation));
-    return;
-  }
-
-  const pathImage = './assets/imageFlower/' + req.params.path;
-  fs.readFile(pathImage, (err, data) => {
-    if (err) {
-      // catch error
-      res.send(error(err));
-    } else {
-      // success
-      res.sendFile(path.resolve(pathImage));
-    }
-  });
+app.get('/id/:id1', async (req, res) => {
+  const id = parseInt(req.params.id1);
 });
 
-app.get('/id/:id', async (req, res) => {
+app.get('/detail/:id', async (req, res) => {
   const schema = {
     id: Joi.number()
       .min(0)
@@ -64,21 +46,11 @@ app.get('/id/:id', async (req, res) => {
       console.log('Connected successfully to server');
       const db = database.db(DATABASE_NAME);
 
-      const a = [];
-      findDocuments(db, COLLECTION_LIST_ALL_IMAGE, { index: id }, result => {
+      findDocuments(db, COLLECTION_FLOWER_DETAIL, { index: id }, result => {
         if (result.toString() == '') {
           res.send(error(err));
         } else {
-          const pathImage = './assets/imageFlower/' + result[0].name;
-          fs.readFile(pathImage, (err, data) => {
-            if (err) {
-              // catch error
-              res.send(error(err));
-            } else {
-              // success
-              res.sendFile(path.resolve(pathImage));
-            }
-          });
+          res.send(success(result));
         }
       });
     },
