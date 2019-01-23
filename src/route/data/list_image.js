@@ -8190,4 +8190,4 @@ const data = [
   'image_08039.jpg',
 ];
 
-export const data
+export default data;

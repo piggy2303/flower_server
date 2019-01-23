@@ -7,7 +7,11 @@ import { error } from './defaultRespone';
 
 import mongo from 'mongodb';
 import assert from 'assert';
-import { MONGODB_URL, DATABASE_NAME } from '../constant/DATABASE';
+import {
+  MONGODB_URL,
+  DATABASE_NAME,
+  COLLECTION_LIST_ALL_IMAGE,
+} from '../constant/DATABASE';
 import { findDocuments } from '../database';
 
 const app = express.Router();
@@ -25,8 +29,8 @@ app.get('/:path', (req, res) => {
   });
 });
 
-app.get('/id/:id', async (req, res) => {
-  const id = req.param.id;
+app.get('/id/:id1', async (req, res) => {
+  const id = parseInt(req.params.id1);
 
   await mongo.connect(
     MONGODB_URL,
@@ -36,18 +40,22 @@ app.get('/id/:id', async (req, res) => {
       console.log('Connected successfully to server');
       const db = database.db(DATABASE_NAME);
 
-      findDocuments(db, { a: 1 }, result => {
-        console.log(result);
-        const pathImage = './assets/imageFlower/image_00009.jpg';
-        fs.readFile(pathImage, (err, data) => {
-          if (err) {
-            // catch error
-            res.send(error(err));
-          } else {
-            // success
-            res.sendFile(path.resolve(pathImage));
-          }
-        });
+      const a = [];
+      findDocuments(db, COLLECTION_LIST_ALL_IMAGE, { index: id }, result => {
+        if (result.toString() == '') {
+          res.send(error(err));
+        } else {
+          const pathImage = './assets/imageFlower/' + result[0].name;
+          fs.readFile(pathImage, (err, data) => {
+            if (err) {
+              // catch error
+              res.send(error(err));
+            } else {
+              // success
+              res.sendFile(path.resolve(pathImage));
+            }
+          });
+        }
       });
     },
   );

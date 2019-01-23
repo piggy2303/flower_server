@@ -7,17 +7,37 @@ import upload from './route/upload';
 import image from './route/image';
 import mongo from 'mongodb';
 import assert from 'assert';
-import { MONGODB_URL, DATABASE_NAME } from './constant/DATABASE';
-
-mongo.connect(
+import {
   MONGODB_URL,
-  { useNewUrlParser: true },
-  (err, database) => {
-    assert.equal(null, err);
-    console.log('Connected successfully to server');
-    const db = database.db(DATABASE_NAME);
-  },
-);
+  DATABASE_NAME,
+  COLLECTION_LIST_ALL_IMAGE,
+} from './constant/DATABASE';
+import data from './route/data/list_image';
+import { insertManyDocument } from './database';
+
+// let a = 1;
+// const dataArr = [];
+// data.map((item, index) => {
+//   dataArr.push({
+//     index: index + 1,
+//     name: item,
+//   });
+// });
+
+// console.log(dataArr);
+
+// mongo.connect(
+//   MONGODB_URL,
+//   { useNewUrlParser: true },
+//   (err, database) => {
+//     assert.equal(null, err);
+//     console.log('Connected successfully to server');
+//     const db = database.db(DATABASE_NAME);
+//     insertManyDocument(db, COLLECTION_LIST_ALL_IMAGE, dataArr, result => {
+//       console.log(result);
+//     });
+//   },
+// );
 
 const insertDocuments = (db, callback) => {
   // Get the documents collection

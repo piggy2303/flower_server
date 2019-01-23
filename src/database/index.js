@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { COLLECTION_LIST_ALL_IMAGE } from '../constant/DATABASE';
 
 const insertManyDocument = (db, document, dataInsert, callback) => {
   // Get the documents collection
@@ -18,7 +19,7 @@ const insertOneDocument = (db, document, dataInsert, callback) => {
   collection.insertOne(dataInsert, (err, result) => {
     assert.equal(err, null);
     console.log('Inserted success');
-    callback(assert.equal(err, null));
+    callback(result);
   });
 };
 
@@ -29,7 +30,6 @@ const findDocuments = (db, document, find, callback) => {
   collection.find(find).toArray((err, docs) => {
     assert.equal(err, null);
     console.log('Found the following records');
-    console.log(docs);
     callback(docs);
   });
 };

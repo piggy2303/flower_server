@@ -40,7 +40,7 @@ app.post('/', async (req, res) => {
       console.log('Connected successfully to server');
       const db = database.db(DATABASE_NAME);
       insertOneDocument(db, COLLECTION_UPLOAD_IMAGE, dataSaveToDB, result => {
-        console.log(result);
+        console.log('done');
       });
     },
   );
@@ -56,7 +56,7 @@ app.post('/', async (req, res) => {
     },
   );
 
-  await Axios.get('http://localhost:8000/demo/' + imageName)
+  await Axios.get('http://localhost:8000/demo/')
     .then(response => {
       // handle success
       console.log(response.data);
