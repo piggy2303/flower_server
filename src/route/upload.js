@@ -65,6 +65,9 @@ app.post('/', async (req, res) => {
         const arrPreprocessing = processData(response.data.data);
         res.send(success(arrPreprocessing));
       }
+      if (response.data.status == 'no_flower') {
+        res.send(success(null));
+      }
     })
     .catch(error => {
       // handle error
