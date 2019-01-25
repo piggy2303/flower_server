@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from keras.applications.vgg19 import VGG19, preprocess_input
 from keras.preprocessing import image
 from keras.models import Model
+from sklearn.preprocessing import normalize
 import os.path
 import sys
 import tensorflow as tf
@@ -19,6 +20,7 @@ model = Model(
     inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
 graph = tf.get_default_graph()
 MYDIR = os.path.dirname(__file__)
+VARIABLE_DETECT = 0.4
 
 
 def get_feature_1_image(image_name):
@@ -31,14 +33,16 @@ def get_feature_1_image(image_name):
     with graph.as_default():
         features = model.predict(x)
 
-    return features
+    features_norm = normalize(features, norm='l2')
+    return features_norm
 
 
 def load_feature():
     print("Load feature")
     all_feature = open("./allFeature.pickle", "rb")
     all_feature_data = cPickle.load(all_feature)
-    return all_feature_data
+    all_feature_data_norm = normalize(all_feature_data, norm='l2')
+    return all_feature_data_norm
 
 
 def load_label():
@@ -64,6 +68,23 @@ def knn(all_feature_data, all_label, feature_test):
     return result_1.tolist()
 
 
+def distance(a, b):
+    distance_vector = np.sum(a * b)
+    return distance_vector
+
+
+def flower_detect(image_detect, arr_all_flower):
+    arr_distance = []
+    # tinh do tuong tu cua anh moi vao so voi anh hoa
+    for i in range(len(arr_all_flower)):
+        arr_distance.append(distance(image_detect, arr_all_flower[i]))
+    # tinh trung binh do tuong tu
+    arr_distance_mean = np.mean(arr_distance)
+    # neu do tuong tu > VARIABLE_DETECT thi moi xet co hoa hay khong
+    print(arr_distance_mean)
+    return arr_distance_mean > VARIABLE_DETECT
+
+
 all_feature_data = load_feature()
 all_label = load_label()
 
@@ -75,16 +96,22 @@ def hello():
 
 @app.route('/predict/<image_name>')
 def predict(image_name):
-    feature_image_upload = get_feature_1_image(image_name)
-    response = knn(all_feature_data, all_label, feature_image_upload)
 
-    data = {
-        "status": "success",
-        "data": {
-            "label": response[0],
-            "index": response[1]
+    feature_image_upload = get_feature_1_image(image_name)
+    detect_condition = flower_detect(feature_image_upload, all_feature_data)
+
+    if detect_condition:
+        response = knn(all_feature_data, all_label, feature_image_upload)
+        data = {
+            "status": "success",
+            "data": {
+                "label": response[0],
+                "index": response[1]
+            }
         }
-    }
+    else:
+        data = {"status": "no_flower", "data": "null"}
+
     js = json.dumps(data)
     resp = Response(js, status=200, mimetype='application/json')
     return resp
@@ -92,3 +119,4 @@ def predict(image_name):
 
 # export FLASK_APP=index.py
 # export FLASK_RUN_PORT=8050
+# python -m flask run
