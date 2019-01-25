@@ -73,14 +73,18 @@ def hello():
     return "hello"
 
 
-@app.route('/<image_name>')
+@app.route('/predict/<image_name>')
 def predict(image_name):
     feature_image_upload = get_feature_1_image(image_name)
     response = knn(all_feature_data, all_label, feature_image_upload)
-    print(response[0])
-    print(response[1])
-    # a = json.dumps({"label": response[0], "index": response[1]})
-    data = {"label": response[0], "index": response[1]}
+
+    data = {
+        "status": "success",
+        "data": {
+            "label": response[0],
+            "index": response[1]
+        }
+    }
     js = json.dumps(data)
     resp = Response(js, status=200, mimetype='application/json')
     return resp

@@ -3,25 +3,8 @@ import { LOCALHOST } from '../constant/URL';
 
 const processData = data => {
   console.log(data);
-
-  // cat phan dau va duoi cua string
-  const data2 = data.substring(2, data.length - 1).split("'][");
-
-  // chia thanh 2 phan label va indexOfImage
-  const label = data2[0].split("', '");
-  const indices = data2[1].split(' ');
-
-  // chuyen cac item trong arr thanh interger
-  const labelInterger = [];
-  lodash.forEach(label, item => {
-    labelInterger.push(lodash.toInteger(item));
-  });
-  const indicesInterger_raw = [];
-  lodash.forEach(indices, item => {
-    indicesInterger_raw.push(lodash.toInteger(item));
-  });
-
-  const indicesInterger = lodash.compact(indicesInterger_raw);
+  const labelInterger = data.label;
+  const indicesInterger = data.index;
 
   // lodash.compact
   // lay ra arr chua cac phan tu uniqe

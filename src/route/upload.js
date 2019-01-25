@@ -57,12 +57,14 @@ app.post('/', async (req, res) => {
     },
   );
 
-  await Axios.get(PYTHON_SERVER)
+  await Axios.get(PYTHON_SERVER + imageName)
     .then(response => {
       // handle success
       console.log(response.data);
-      const arrPreprocessing = processData(response.data);
-      res.send(success(arrPreprocessing));
+      if (response.data.status == 'success') {
+        const arrPreprocessing = processData(response.data.data);
+        res.send(success(arrPreprocessing));
+      }
     })
     .catch(error => {
       // handle error
