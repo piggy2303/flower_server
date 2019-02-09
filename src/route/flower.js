@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import Axios from 'axios';
 import Joi from 'joi';
+import lodash from 'lodash';
 
 import path from 'path';
 import { error, success } from './defaultRespone';
@@ -53,6 +54,55 @@ app.get('/detail/:id', async (req, res) => {
           res.send(success(result));
         }
       });
+    },
+  );
+});
+
+app.get('/search/:keyword', async (req, res) => {
+  const schema = {
+    keyword: Joi.string()
+      .min(2)
+      .required(),
+  };
+
+  // validate key word truyen vao
+  const validation = Joi.validate(req.params, schema);
+  if (validation.error) {
+    res.send(error(validation));
+    return;
+  }
+
+  // dua keyword ve dang RegExp %keyword%
+  let keyword = req.params.keyword.toString();
+  keyword = new RegExp(keyword);
+
+  await mongo.connect(
+    MONGODB_URL,
+    { useNewUrlParser: true },
+    (err, database) => {
+      assert.equal(null, err);
+      console.log('Connected successfully to server');
+      const db = database.db(DATABASE_NAME);
+
+      findDocuments(
+        db,
+        COLLECTION_FLOWER_DETAIL,
+        {
+          // tim kiem ten loai hoa theo tieng viet, tieng anh, latin
+          $or: [
+            { name_vi: { $regex: keyword } },
+            { name_en: { $regex: keyword } },
+            { name_latin: { $regex: keyword } },
+          ],
+        },
+        result => {
+          if (result.toString() == '') {
+            res.send(error(err));
+          } else {
+            res.send(success(result));
+          }
+        },
+      );
     },
   );
 });

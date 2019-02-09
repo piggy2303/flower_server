@@ -10,6 +10,7 @@ import {
   MONGODB_URL,
   DATABASE_NAME,
   COLLECTION_UPLOAD_IMAGE,
+  COLLECTION_FLOWER_DETAIL,
 } from '../constant/DATABASE';
 import { findDocuments, insertOneDocument } from '../database';
 import Moment from 'moment';
@@ -58,12 +59,39 @@ app.post('/', async (req, res) => {
   );
 
   await Axios.get(PYTHON_SERVER + imageName)
-    .then(response => {
+    .then(async response => {
       // handle success
       console.log(response.data);
       if (response.data.status == 'success') {
-        const arrPreprocessing = processData(response.data.data);
-        res.send(success(arrPreprocessing));
+        const arrPreprocessing = await processData(response.data.data);
+        // res.send(success(arrPreprocessing));
+        await mongo.connect(
+          MONGODB_URL,
+          { useNewUrlParser: true },
+          (err, database) => {
+            assert.equal(null, err);
+            console.log('Connected successfully to server');
+            const db = database.db(DATABASE_NAME);
+
+            const collection = db.collection(COLLECTION_FLOWER_DETAIL);
+            // Find some documents
+            collection
+              .find({})
+              .project({ _id: 0, list_image: 0 })
+              .toArray((err, result) => {
+                assert.equal(err, null);
+
+                arrPreprocessing.map(item => {
+                  result.map(item_all_flower => {
+                    if (item_all_flower.index == item.id_flower) {
+                      item.detail = item_all_flower;
+                    }
+                  });
+                });
+                res.send(success(arrPreprocessing));
+              });
+          },
+        );
       }
       if (response.data.status == 'no_flower') {
         res.send(success(null));

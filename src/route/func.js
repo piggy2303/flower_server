@@ -1,6 +1,16 @@
 import lodash from 'lodash';
 import { LOCALHOST } from '../constant/URL';
 
+import mongo from 'mongodb';
+import assert from 'assert';
+import {
+  MONGODB_URL,
+  DATABASE_NAME,
+  COLLECTION_LIST_ALL_IMAGE,
+  COLLECTION_FLOWER_DETAIL,
+} from '../constant/DATABASE';
+import { findDocuments } from '../database';
+
 const processData = data => {
   console.log(data);
   const labelInterger = data.label;
@@ -22,10 +32,8 @@ const processData = data => {
       ];
 
     result.push({
-      link_image: LOCALHOST + '/api/image/id/' + indexOfImage,
-      name: 'flower index' + item,
-      detail: 'detail',
-      accuracy: 25,
+      link_image: indexOfImage,
+      accuracy: 0,
       id_flower: item,
     });
   });
@@ -36,7 +44,7 @@ const processData = data => {
   const resultMerge = merge(result, accuracy(labelInterger, unique));
 
   // sap xep arr theo muc do chinh xac
-  const resultMergeSort = lodash.reverse(
+  let resultMergeSort = lodash.reverse(
     lodash.sortBy(resultMerge, item => {
       return item.accuracy;
     }),

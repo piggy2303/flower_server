@@ -1,17 +1,20 @@
-from flask import Flask, jsonify, Response
-from sklearn.neighbors import NearestNeighbors, KNeighborsClassifier
-import numpy as np
-import cPickle
-from sklearn import metrics
-from sklearn.model_selection import train_test_split
-from keras.applications.vgg19 import VGG19, preprocess_input
-from keras.preprocessing import image
-from keras.models import Model
-from sklearn.preprocessing import normalize
 import os.path
 import sys
 import tensorflow as tf
 import json
+import numpy as np
+import cPickle
+
+from flask import Flask, jsonify, Response
+
+from keras.applications.vgg19 import VGG19, preprocess_input
+from keras.preprocessing import image
+from keras.models import Model
+
+from sklearn.preprocessing import normalize
+from sklearn.neighbors import NearestNeighbors
+from sklearn import metrics
+from sklearn.model_selection import train_test_split
 
 app = Flask(__name__)
 
@@ -20,7 +23,7 @@ model = Model(
     inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
 graph = tf.get_default_graph()
 MYDIR = os.path.dirname(__file__)
-VARIABLE_DETECT = 0.4
+VARIABLE_DETECT = 0
 
 
 def get_feature_1_image(image_name):
@@ -64,7 +67,7 @@ def knn(all_feature_data, all_label, feature_test):
     for i in indices[0]:
         result.append(all_label[i])
     result_1 = np.append([result], indices, axis=0)
-    print result_1
+    print(result_1)
     return result_1.tolist()
 
 
