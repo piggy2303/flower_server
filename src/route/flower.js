@@ -58,6 +58,26 @@ app.get('/detail/:id', async (req, res) => {
   );
 });
 
+app.get('/search', async (req, res) => {
+  await mongo.connect(
+    MONGODB_URL,
+    { useNewUrlParser: true },
+    (err, database) => {
+      assert.equal(null, err);
+      console.log('Connected successfully to server');
+      const db = database.db(DATABASE_NAME);
+
+      findDocuments(db, COLLECTION_FLOWER_DETAIL, {}, result => {
+        if (result.toString() == '') {
+          res.send(error(err));
+        } else {
+          res.send(success(result));
+        }
+      });
+    },
+  );
+});
+
 app.get('/search/:keyword', async (req, res) => {
   const schema = {
     keyword: Joi.string()
