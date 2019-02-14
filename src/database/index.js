@@ -29,22 +29,39 @@ const findDocuments = (db, document, find, callback) => {
   // Find some documents
   collection.find(find).toArray((err, docs) => {
     assert.equal(err, null);
-    console.log('Found the following records');
     callback(docs);
   });
 };
 
-const updateDocument = (db, document, update, callback) => {
+const updateDocument = (db, document, filter, update, callback) => {
   // Get the documents collection
   const collection = db.collection(document);
   // Update document where a is 2, set b equal to 1
   // collection.updateOne({ a: 2 }, { $set: { b: 1 } }, (err, result) => {
-  collection.updateOne(update, (err, result) => {
+  collection.updateOne(filter, update, (err, result) => {
     assert.equal(err, null);
     assert.equal(1, result.result.n);
-    console.log('Updated the document with the field a equal to 2');
+    console.log('update one document');
     callback(result);
   });
 };
 
-export { findDocuments, insertManyDocument, insertOneDocument, updateDocument };
+const updateManyDocument = (db, document, filter, update, callback) => {
+  // Get the documents collection
+  const collection = db.collection(document);
+  // Update document where a is 2, set b equal to 1
+  // collection.updateOne({ a: 2 }, { $set: { b: 1 } }, (err, result) => {
+  collection.updateMany(filter, update, (err, result) => {
+    assert.equal(err, null);
+    console.log('update many document');
+    callback(result);
+  });
+};
+
+export {
+  findDocuments,
+  insertManyDocument,
+  insertOneDocument,
+  updateDocument,
+  updateManyDocument,
+};

@@ -23,7 +23,7 @@ model = Model(
     inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
 graph = tf.get_default_graph()
 MYDIR = os.path.dirname(__file__)
-VARIABLE_DETECT = 0
+VARIABLE_DETECT = 0.3
 
 
 def get_feature_1_image(image_name):
