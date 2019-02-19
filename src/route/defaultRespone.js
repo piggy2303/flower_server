@@ -1,14 +1,14 @@
-const error = error => {
+const error = errorInput => {
   return {
     status: 'error',
-    data: error,
+    data: errorInput,
   };
 };
 
 const success = data => {
   return {
     status: 'success',
-    data: data,
+    data,
   };
 };
 

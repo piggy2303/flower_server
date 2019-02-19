@@ -1,11 +1,12 @@
 import express from 'express';
 import fs from 'fs';
 import Axios from 'axios';
-import { processData } from './func';
-import { error, success } from './defaultRespone';
-
+import Moment from 'moment';
 import mongo from 'mongodb';
 import assert from 'assert';
+
+import { processData } from './func';
+import { error, success } from './defaultRespone';
 import {
   MONGODB_URL,
   DATABASE_NAME,
@@ -13,8 +14,8 @@ import {
   COLLECTION_FLOWER_DETAIL,
 } from '../constant/DATABASE';
 import { findDocuments, insertOneDocument } from '../database';
-import Moment from 'moment';
 import { PYTHON_SERVER } from '../constant/URL';
+
 const moment = Moment();
 
 const app = express.Router();
@@ -78,13 +79,13 @@ app.post('/', async (req, res) => {
             collection
               .find({})
               .project({ _id: 0, list_image: 0 })
-              .toArray((err, result) => {
-                assert.equal(err, null);
+              .toArray((error1, result) => {
+                assert.equal(error1, null);
 
                 arrPreprocessing.map(item => {
-                  result.map(item_all_flower => {
-                    if (item_all_flower.index == item.id_flower) {
-                      item.detail = item_all_flower;
+                  result.map(itemAllFlower => {
+                    if (itemAllFlower.index == item.id_flower) {
+                      item.detail = itemAllFlower;
                     }
                   });
                 });
@@ -97,9 +98,9 @@ app.post('/', async (req, res) => {
         res.send(success(null));
       }
     })
-    .catch(error => {
+    .catch(error1 => {
       // handle error
-      console.log(error);
+      console.log(error1);
     });
 });
 

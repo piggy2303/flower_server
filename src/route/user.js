@@ -17,21 +17,32 @@ import { findDocuments, insertOneDocument } from '../database';
 import { JWT_KEY } from '../constant/JWT_KEY';
 import { decode } from 'punycode';
 import { error, success } from './defaultRespone';
+import { USER_NAME_RANDOM } from '../constant/userNameRandomData';
+import moment from 'moment';
 
 const app = express.Router();
 
 // CRUD
 
 const createUser = device_id => {
-  const radom = Math.floor(Math.random() * 10 + 1);
+  const random = Math.floor(Math.random() * 50 + 1);
+  const radomName = USER_NAME_RANDOM.find(x => x.index == random);
   const data = {
     device_id: device_id,
-    user_name: 'piggy',
-    user_logo: 'animal.png',
+    user_name: radomName.name,
+    user_logo: radomName.image,
     user_role: 100,
-    day_create: 2018 / 23 / 12,
+    day_update: moment().toISOString(),
   };
   return data;
+};
+
+const getToken = data => {
+  const token = jwt.sign({ data: data }, JWT_KEY, {
+    expiresIn: '6h',
+    algorithm: 'HS256',
+  });
+  return token;
 };
 
 app.post('/auth', async (req, res) => {
@@ -48,6 +59,8 @@ app.post('/auth', async (req, res) => {
     return;
   }
 
+  // res.send(createUser('ha'));
+
   await mongo.connect(
     MONGODB_URL,
     { useNewUrlParser: true },
@@ -59,21 +72,37 @@ app.post('/auth', async (req, res) => {
       findDocuments(
         db,
         COLLECTION_USER,
-        {
-          device_id: req.body.device_id,
-        },
+        { device_id: req.body.device_id },
         result => {
           if (result.toString() == '') {
             // neu khong co thi them user
             // tra ve token
-            insertOneDocument(
-              db,
-              COLLECTION_USER,
-              createUser(req.body.device_id),
-            );
+            const radomNewUser = createUser(req.body.device_id);
+
+            insertOneDocument(db, COLLECTION_USER, radomNewUser, result => {
+              if (result.result.n == 1) {
+                res.send(
+                  success({
+                    token: getToken(radomNewUser),
+                    newUser: true,
+                  }),
+                );
+                return;
+              }
+            });
           } else {
             // neu co thi tra ve token
-            res.send(success(result));
+            const data = result[0];
+            console.log(data);
+
+            res.send(
+              success({
+                result: data,
+                token: getToken(data),
+                newUser: false,
+              }),
+            );
+            return;
           }
         },
       );
@@ -81,32 +110,46 @@ app.post('/auth', async (req, res) => {
   );
 });
 
-app.post('/create', (req, res) => {});
-
-app.get('/gettoken', (req, res) => {
-  const token = jwt.sign(
-    {
-      data: 'haha',
-    },
-    JWT_KEY,
-    {
-      expiresIn: '6h',
-      algorithm: 'HS256',
-    },
-  );
-  res.send(token);
-});
-
-app.get('/validatetoken/:token', (req, res) => {
-  const decoded = jwt.verify(req.params.token, JWT_KEY, (err, decode) => {
+const decodeJwt = token => {
+  const decoded = jwt.verify(token, JWT_KEY, (err, decode) => {
     if (err) {
-      res.send(error(err));
+      return error;
     }
+    return decode;
   });
-  res.send(decoded);
-});
+};
 
-app.post('/update', (req, res) => {});
+// only update user name
+app.post('/update', (req, res) => {
+  const schema = {
+    token: Joi.string()
+      .min(2)
+      .required(),
+    user_name: Joi.string()
+      .min(2)
+      .required(),
+    user_logo: Joi.string()
+      .min(2)
+      .required(),
+  };
+
+  // validate token truyen vao
+  const validation = Joi.validate(req.body, schema);
+  if (validation.error) {
+    res.send(error(validation));
+    return;
+  }
+
+  const decoded = jwt.verify(req.body.token, JWT_KEY, (err, decode) => {
+    if (err) {
+      res.send('err token');
+    }
+    console.log(decode);
+  });
+
+  console.log(decoded);
+  res.send('ok');
+});
 
 app.post('/delete', (req, res) => {});
 

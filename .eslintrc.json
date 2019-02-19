@@ -1,0 +1,17 @@
+{
+  "extends": "airbnb-base",
+  "rules": {
+    "no-case-declarations": "off",
+    "implicit-arrow-linebreak": "off",
+    "prefer-template": "off",
+    "arrow-body-style": "off",
+    "arrow-parens": "off",
+    "no-console": "off",
+    "no-underscore-dangle": "off",
+    "linebreak-style": 0,
+    "import/extensions": 0,
+    "import/no-unresolved": 0,
+    "sort-imports": "off",
+    "eqeqeq": "off"
+  }
+}

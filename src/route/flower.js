@@ -1,15 +1,9 @@
 import express from 'express';
-import fs from 'fs';
-import Axios from 'axios';
 import Joi from 'joi';
-import lodash from 'lodash';
-
-import path from 'path';
-import { error, success } from './defaultRespone';
-// import moduleName from '../../assets/imageFlower';
-
 import mongo from 'mongodb';
 import assert from 'assert';
+import { error, success } from './defaultRespone';
+
 import {
   MONGODB_URL,
   DATABASE_NAME,
@@ -20,31 +14,25 @@ import { findDocuments, updateDocument, updateManyDocument } from '../database';
 
 const app = express.Router();
 
-// app.get('/id', async (req, res) => {
-//   await mongo.connect(
-//     MONGODB_URL,
-//     { useNewUrlParser: true },
-//     (err, database) => {
-//       assert.equal(null, err);
-//       console.log('Connected successfully to server');
-//       const db = database.db(DATABASE_NAME);
+const updateCountView = async id => {
+  await mongo.connect(
+    MONGODB_URL,
+    { useNewUrlParser: true },
+    (err, database) => {
+      assert.equal(null, err);
+      console.log('Connected successfully to server');
+      const db = database.db(DATABASE_NAME);
 
-//       updateManyDocument(
-//         db,
-//         COLLECTION_FLOWER_DETAIL,
-//         {},
-//         { $set: { count_view: 0 } },
-//         result => {
-//           if (result.toString() == '') {
-//             res.send(error(err));
-//           } else {
-//             res.send(success(result));
-//           }
-//         },
-//       );
-//     },
-//   );
-// });
+      updateDocument(
+        db,
+        COLLECTION_FLOWER_DETAIL,
+        { index: id },
+        { $inc: { count_view: 1 } },
+        result => {},
+      );
+    },
+  );
+};
 
 app.get('/detail/:id', async (req, res) => {
   const schema = {
@@ -59,7 +47,7 @@ app.get('/detail/:id', async (req, res) => {
     return;
   }
 
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id, 10);
 
   await mongo.connect(
     MONGODB_URL,
@@ -73,14 +61,8 @@ app.get('/detail/:id', async (req, res) => {
         if (result.toString() == '') {
           res.send(error(err));
         } else {
-          updateDocument(
-            db,
-            COLLECTION_FLOWER_DETAIL,
-            { index: id },
-            { $inc: { count_view: 1 } },
-            result => {},
-          );
           res.send(success(result));
+          updateCountView(id);
         }
       });
     },
@@ -103,10 +85,10 @@ app.get('/search', async (req, res) => {
         .find({ count_view: { $gt: 0 } })
         .sort({ count_view: -1 })
         .limit(10)
-        .toArray((err, docs) => {
-          assert.equal(err, null);
+        .toArray((err1, docs) => {
+          assert.equal(err1, null);
           if (docs.toString() == '') {
-            res.send(error(err));
+            res.send(error(err1));
           } else {
             res.send(success(docs));
           }
