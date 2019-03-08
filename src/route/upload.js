@@ -100,7 +100,8 @@ app.post('/', async (req, res) => {
     })
     .catch(error1 => {
       // handle error
-      console.log(error1);
+      console.log('error python server');
+      res.send(error(error1.toString()));
     });
 });
 

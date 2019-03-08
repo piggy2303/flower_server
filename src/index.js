@@ -1,9 +1,5 @@
 import express from 'express';
-import Joi from 'joi';
-import fs from 'fs';
 import bodyParser from 'body-parser';
-import mongo from 'mongodb';
-import assert from 'assert';
 
 // router
 import user from './route/user';
@@ -19,7 +15,6 @@ app.use(bodyParser.json({ limit: '200mb', extended: true }));
 app.use(bodyParser.urlencoded({ limit: '200mb', extended: true }));
 app.use(express.json());
 
-// app.use('/api/demo', demo);
 app.use('/api/upload', upload);
 app.use('/api/image', image);
 app.use('/api/flower', flower);

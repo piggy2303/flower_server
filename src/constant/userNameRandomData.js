@@ -50,3 +50,5 @@ export const USER_NAME_RANDOM = [
   { index: 2, name: 'wolf', image: '002-wolf.png' },
   { index: 5, name: 'sheep', image: '005-sheep.png' },
 ];
+
+export const data2 = null;
