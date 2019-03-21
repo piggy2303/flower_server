@@ -15,6 +15,10 @@ app.use(bodyParser.json({ limit: '200mb', extended: true }));
 app.use(bodyParser.urlencoded({ limit: '200mb', extended: true }));
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.send('hello world');
+});
+
 app.use('/api/upload', upload);
 app.use('/api/image', image);
 app.use('/api/flower', flower);
