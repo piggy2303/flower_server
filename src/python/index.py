@@ -16,6 +16,9 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn import metrics
 from sklearn.model_selection import train_test_split
 
+import pymongo
+from bson.json_util import dumps
+
 app = Flask(__name__)
 
 base_model = VGG19(weights='imagenet')
@@ -44,6 +47,11 @@ model_detect = cPickle.load(open('./model_detect.sav', 'rb'))
 model_regconize = cPickle.load(open('./model_LinearSVC_9.sav', 'rb'))
 
 
+myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mydb = myclient["flower"]
+mycol = mydb["collection_flower_detail"]
+
+
 @app.route('/')
 def hello():
     return "hello"
@@ -60,19 +68,27 @@ def predict(image_name):
 
     label = [np.where(result_table == result_sort[0])[0][0]+1,
              np.where(result_table == result_sort[1])[0][0]+1,
-             np.where(result_table == result_sort[2])[0][0]+1]
+             np.where(result_table == result_sort[2])[0][0]+1,
+             np.where(result_table == result_sort[3])[0][0]+1,
+             np.where(result_table == result_sort[4])[0][0]+1]
+
+    arr_flower = []
+
+    for item in label:
+        mongo_item = mycol.find_one({'index': item})
+        arr_flower.append(dumps(mongo_item))
 
     if have_flower:
         data = {
             "status": "success",
             "data": {
-                "label": label,
+                "label": json.loads(arr_flower),
             }
         }
     else:
         data = {"status": "no_flower", "data": "null"}
 
-    js = json.dumps(data)
+    js = data
     resp = Response(js, status=200, mimetype='application/json')
     return resp
 

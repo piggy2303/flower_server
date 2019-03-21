@@ -64,8 +64,10 @@ app.post('/', async (req, res) => {
       // handle success
       console.log(response.data);
       if (response.data.status == 'success') {
-        const arrPreprocessing = await processData(response.data.data);
-        // res.send(success(arrPreprocessing));
+        // const arrPreprocessing = await processData(response.data.data);
+        // // res.send(success(arrPreprocessing));
+        
+
         await mongo.connect(
           MONGODB_URL,
           { useNewUrlParser: true },
