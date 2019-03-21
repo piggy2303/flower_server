@@ -1,6 +1,5 @@
 node_modules/
 *.pyc
 *.pickle
-imageFlower/
 package-lock.json
 uploadFolder/
