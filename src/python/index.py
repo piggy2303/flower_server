@@ -5,7 +5,7 @@ import json
 import numpy as np
 import cPickle
 
-from flask import Flask, jsonify, Response
+from flask import Flask, jsonify, Response, request
 
 from keras.applications.vgg19 import VGG19, preprocess_input
 from keras.preprocessing import image
@@ -15,9 +15,14 @@ from sklearn.preprocessing import normalize
 from sklearn.neighbors import NearestNeighbors
 from sklearn import metrics
 from sklearn.model_selection import train_test_split
-
+import json
 import pymongo
 from bson.json_util import dumps
+import time
+
+
+import base64
+
 
 app = Flask(__name__)
 
@@ -30,7 +35,7 @@ VARIABLE_DETECT = 0.3
 
 
 def get_feature_1_image(image_name):
-    img_path = '../../assets/uploadFolder/' + image_name
+    img_path = image_name
     img = image.load_img(img_path, target_size=(224, 224))
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
@@ -57,40 +62,66 @@ def hello():
     return "hello"
 
 
-@app.route('/predict/<image_name>')
-def predict(image_name):
+@app.route("/post", methods=['POST'])
+def post_test():
+    if request.method == 'POST':
+        content = request.get_json()
 
-    feature_image_upload = get_feature_1_image(image_name)
-    # print(model_detect.predict(feature_image_upload)[0] == 1)
-    have_flower = (model_detect.predict(feature_image_upload)[0] == 1)
-    result_table = model_regconize.decision_function(feature_image_upload)[0]
-    result_sort = np.sort(result_table)[::-1]
+        # print(content)
+        imgdata = base64.b64decode(content['image'])
+        filename = 'some_image.jpg'  # I assume you have a way of picking unique filenames
+        with open(filename, 'wb') as f:
+            f.write(imgdata)
 
-    label = [np.where(result_table == result_sort[0])[0][0]+1,
-             np.where(result_table == result_sort[1])[0][0]+1,
-             np.where(result_table == result_sort[2])[0][0]+1,
-             np.where(result_table == result_sort[3])[0][0]+1,
-             np.where(result_table == result_sort[4])[0][0]+1]
+        return "success"
 
-    arr_flower = []
 
-    for item in label:
-        mongo_item = mycol.find_one({'index': item})
-        arr_flower.append(dumps(mongo_item))
+@app.route('/predict', methods=['POST'])
+def predict():
 
-    if have_flower:
-        data = {
-            "status": "success",
-            "data": {
-                "label": json.loads(arr_flower),
-            }
-        }
-    else:
-        data = {"status": "no_flower", "data": "null"}
+    if request.method == 'POST':
+        # change request to json
+        request_json = request.get_json()
 
-    js = data
-    resp = Response(js, status=200, mimetype='application/json')
-    return resp
+        # change base64 to image and save file
+        imgdata = base64.b64decode(request_json['image'])
+        path_image_name = "./upload/" + str(time.time()) + ".jpg"
+        with open(path_image_name, 'wb') as f:
+            f.write(imgdata)
+        print("save success")
+
+        # get get feature image upload
+        feature_image_upload = get_feature_1_image(path_image_name)
+
+        # detect flower in image
+        have_flower = (model_detect.predict(feature_image_upload)[0] == 1)
+
+        if have_flower:
+            result_table = model_regconize.decision_function(feature_image_upload)[
+                0]
+            result_sort = np.sort(result_table)[:: -1]
+
+            label = [np.where(result_table == result_sort[0])[0][0]+1,
+                     np.where(result_table == result_sort[1])[0][0]+1,
+                     np.where(result_table == result_sort[2])[0][0]+1,
+                     np.where(result_table == result_sort[3])[0][0]+1,
+                     np.where(result_table == result_sort[4])[0][0]+1]
+
+            arr_flower = []
+
+            for item in label:
+                mongo_item = mycol.find_one(
+                    {'index': item}, {"_id": 0, "detail": 0})
+                arr_flower.append(json.loads(dumps(mongo_item)))
+
+            # print(arr_flower)
+            print(label)
+            return jsonify(status="success",
+                           data=arr_flower)
+        else:
+            data = {"status": "no_flower", "data": "null"}
+            return jsonify(status="no_flower",
+                           data="null")
 
 
 # export FLASK_APP=index.py
