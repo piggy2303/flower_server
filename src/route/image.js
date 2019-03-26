@@ -5,6 +5,7 @@ import path from 'path';
 import Joi from 'joi';
 import mongo from 'mongodb';
 import assert from 'assert';
+// import moduleName from '../../src/python/upload';
 
 import {
   MONGODB_URL,
@@ -95,6 +96,35 @@ app.get('/user/:path', (req, res) => {
   }
 
   const pathImage = './assets/userIcon/' + req.params.path;
+
+  console.log(pathImage);
+
+  fs.readFile(pathImage, (err, data) => {
+    if (err) {
+      // catch error
+      res.send(error(err));
+    } else {
+      // success
+      res.sendFile(path.resolve(pathImage));
+    }
+  });
+});
+
+app.get('/upload/:path', (req, res) => {
+  const schema = {
+    path: Joi.string().required(),
+  };
+
+  const validation = Joi.validate(req.params, schema);
+  if (validation.error) {
+    res.send(error(validation));
+    return;
+  }
+
+  const pathImage = './src/python/upload/' + req.params.path;
+
+  console.log(pathImage);
+
   fs.readFile(pathImage, (err, data) => {
     if (err) {
       // catch error

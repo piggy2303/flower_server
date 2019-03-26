@@ -12,6 +12,7 @@ import {
   DATABASE_NAME,
   COLLECTION_LIST_ALL_IMAGE,
   COLLECTION_USER,
+  COLLECTION_UPLOAD_IMAGE,
 } from '../constant/DATABASE';
 import { findDocuments, insertOneDocument } from '../database';
 import { JWT_KEY } from '../constant/JWT_KEY';
@@ -28,7 +29,7 @@ const createUser = device_id => {
   const random = Math.floor(Math.random() * 50 + 1);
   const radomName = USER_NAME_RANDOM.find(x => x.index == random);
   const data = {
-    device_id: device_id,
+    device_id,
     user_name: radomName.name,
     user_logo: radomName.image,
     user_role: 100,
@@ -37,13 +38,39 @@ const createUser = device_id => {
   return data;
 };
 
-const getToken = data => {
-  const token = jwt.sign({ data: data }, JWT_KEY, {
-    expiresIn: '6h',
-    algorithm: 'HS256',
-  });
-  return token;
-};
+app.get('/:device_id', async (req, res) => {
+  const schema = {
+    device_id: Joi.string().required(),
+  };
+
+  // validate key word truyen vao
+  const validation = Joi.validate(req.params, schema);
+  if (validation.error) {
+    res.send(error(validation));
+    return;
+  }
+
+  await mongo.connect(
+    MONGODB_URL,
+    { useNewUrlParser: true },
+    (err, database) => {
+      assert.equal(null, err);
+      const db = database.db(DATABASE_NAME);
+      const collection = db.collection(COLLECTION_USER);
+
+      collection
+        .find({ device_id: req.params.device_id })
+        .toArray((err, docs) => {
+          assert.equal(err, null);
+          if (docs.toString() == '') {
+            res.send(success(null));
+          } else {
+            res.send(success(docs));
+          }
+        });
+    },
+  );
+});
 
 app.post('/auth', async (req, res) => {
   const schema = {
@@ -81,13 +108,7 @@ app.post('/auth', async (req, res) => {
 
             insertOneDocument(db, COLLECTION_USER, radomNewUser, result => {
               if (result.result.n == 1) {
-                res.send(
-                  success({
-                    token: getToken(radomNewUser),
-                    newUser: true,
-                  }),
-                );
-                return;
+                res.send(success(radomNewUser));
               }
             });
           } else {
@@ -95,29 +116,13 @@ app.post('/auth', async (req, res) => {
             const data = result[0];
             console.log(data);
 
-            res.send(
-              success({
-                result: data,
-                token: getToken(data),
-                newUser: false,
-              }),
-            );
-            return;
+            res.send(success(data));
           }
         },
       );
     },
   );
 });
-
-const decodeJwt = token => {
-  const decoded = jwt.verify(token, JWT_KEY, (err, decode) => {
-    if (err) {
-      return error;
-    }
-    return decode;
-  });
-};
 
 // only update user name
 app.post('/update', (req, res) => {
@@ -151,6 +156,67 @@ app.post('/update', (req, res) => {
   res.send('ok');
 });
 
-app.post('/delete', (req, res) => {});
+// app.get('/upload', async (req, res) => {
+//   console.log('upload all');
+
+//   await mongo.connect(
+//     MONGODB_URL,
+//     { useNewUrlParser: true },
+//     (err, database) => {
+//       assert.equal(null, err);
+//       const db = database.db(DATABASE_NAME);
+//       const collection = db.collection(COLLECTION_UPLOAD_IMAGE);
+
+//       collection.find({}).toArray((err, docs) => {
+//         assert.equal(err, null);
+//         if (docs.toString() == '') {
+//           res.send(success(docs));
+//         } else {
+//           res.send(success(docs));
+//         }
+//       });
+//     },
+//   );
+// });
+
+app.get('/upload/:device_id', async (req, res) => {
+  console.log('upload id');
+
+  const schema = {
+    device_id: Joi.string()
+      .min(2)
+      .required(),
+  };
+
+  // validation device_id
+  const validation = Joi.validate(req.params, schema);
+  if (validation.error) {
+    res.send(error(validation));
+    return;
+  }
+
+  await mongo.connect(
+    MONGODB_URL,
+    { useNewUrlParser: true },
+    (err, database) => {
+      assert.equal(null, err);
+      const db = database.db(DATABASE_NAME);
+
+      // tim kiem device_id trong db
+      findDocuments(
+        db,
+        COLLECTION_UPLOAD_IMAGE,
+        { device_id: req.params.device_id },
+        result => {
+          if (result.toString() == '') {
+            res.send(success(null));
+          } else {
+            res.send(success(result));
+          }
+        },
+      );
+    },
+  );
+});
 
 module.exports = app;

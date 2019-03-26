@@ -33,6 +33,14 @@ graph = tf.get_default_graph()
 MYDIR = os.path.dirname(__file__)
 VARIABLE_DETECT = 0.3
 
+model_detect = cPickle.load(open('./model_detect.sav', 'rb'))
+model_regconize = cPickle.load(open('./model_LinearSVC_9.sav', 'rb'))
+
+
+myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mydb = myclient["flower"]
+mycol = mydb["collection_flower_detail"]
+
 
 def get_feature_1_image(image_name):
     img_path = image_name
@@ -48,32 +56,18 @@ def get_feature_1_image(image_name):
     return features_norm
 
 
-model_detect = cPickle.load(open('./model_detect.sav', 'rb'))
-model_regconize = cPickle.load(open('./model_LinearSVC_9.sav', 'rb'))
-
-
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-mydb = myclient["flower"]
-mycol = mydb["collection_flower_detail"]
+def add_image_to_mongo(image_name, device_id):
+    collection_upload_image = mydb["collection_upload_image"]
+    data_insert = {
+        "image_name": image_name,
+        "device_id": device_id,
+    }
+    x = collection_upload_image.insert_one(data_insert)
 
 
 @app.route('/')
 def hello():
     return "hello"
-
-
-@app.route("/post", methods=['POST'])
-def post_test():
-    if request.method == 'POST':
-        content = request.get_json()
-
-        # print(content)
-        imgdata = base64.b64decode(content['image'])
-        filename = 'some_image.jpg'  # I assume you have a way of picking unique filenames
-        with open(filename, 'wb') as f:
-            f.write(imgdata)
-
-        return "success"
 
 
 @app.route('/predict', methods=['POST'])
@@ -85,10 +79,16 @@ def predict():
 
         # change base64 to image and save file
         imgdata = base64.b64decode(request_json['image'])
-        path_image_name = "./upload/" + str(time.time()) + ".jpg"
+
+        # get device_id and image_name
+        device_id = request_json["device_id"]
+        image_name = str(time.time()) + ".jpg"
+
+        # save image
+        path_image_name = "./upload/" + image_name
         with open(path_image_name, 'wb') as f:
             f.write(imgdata)
-        print("save success")
+        print("save image success")
 
         # get get feature image upload
         feature_image_upload = get_feature_1_image(path_image_name)
@@ -97,6 +97,9 @@ def predict():
         have_flower = (model_detect.predict(feature_image_upload)[0] == 1)
 
         if have_flower:
+            # add_image_to_mongo
+            add_image_to_mongo(image_name, device_id)
+
             result_table = model_regconize.decision_function(feature_image_upload)[
                 0]
             result_sort = np.sort(result_table)[:: -1]
@@ -117,7 +120,8 @@ def predict():
             # print(arr_flower)
             print(label)
             return jsonify(status="success",
-                           data=arr_flower)
+                           data=arr_flower,
+                           image_name=image_name)
         else:
             data = {"status": "no_flower", "data": "null"}
             return jsonify(status="no_flower",
