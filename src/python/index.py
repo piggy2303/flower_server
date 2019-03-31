@@ -56,11 +56,12 @@ def get_feature_1_image(image_name):
     return features_norm
 
 
-def add_image_to_mongo(image_name, device_id):
+def add_image_to_mongo(image_name, device_id, flower_recognize):
     collection_upload_image = mydb["collection_upload_image"]
     data_insert = {
         "image_name": image_name,
         "device_id": device_id,
+        "flower_recognize": flower_recognize
     }
     x = collection_upload_image.insert_one(data_insert)
 
@@ -98,7 +99,6 @@ def predict():
 
         if have_flower:
             # add_image_to_mongo
-            add_image_to_mongo(image_name, device_id)
 
             result_table = model_regconize.decision_function(feature_image_upload)[
                 0]
@@ -118,6 +118,8 @@ def predict():
                 arr_flower.append(json.loads(dumps(mongo_item)))
 
             # print(arr_flower)
+
+            add_image_to_mongo(image_name, device_id, arr_flower)
             print(label)
             return jsonify(status="success",
                            data=arr_flower,

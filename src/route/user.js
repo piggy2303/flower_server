@@ -125,15 +125,12 @@ app.post('/auth', async (req, res) => {
 });
 
 // only update user name
-app.post('/update', (req, res) => {
+app.post('/update', async (req, res) => {
   const schema = {
-    token: Joi.string()
+    device_id: Joi.string()
       .min(2)
       .required(),
     user_name: Joi.string()
-      .min(2)
-      .required(),
-    user_logo: Joi.string()
       .min(2)
       .required(),
   };
@@ -145,15 +142,25 @@ app.post('/update', (req, res) => {
     return;
   }
 
-  const decoded = jwt.verify(req.body.token, JWT_KEY, (err, decode) => {
-    if (err) {
-      res.send('err token');
-    }
-    console.log(decode);
-  });
+  await mongo.connect(
+    MONGODB_URL,
+    { useNewUrlParser: true },
+    (err, database) => {
+      assert.equal(null, err);
+      const db = database.db(DATABASE_NAME);
+      const collection = db.collection(COLLECTION_USER);
 
-  console.log(decoded);
-  res.send('ok');
+      collection.updateOne(
+        { device_id: req.body.device_id },
+        { $set: { user_name: req.body.user_name } },
+        (err, result) => {
+          assert.equal(err, null);
+          console.log('update one document');
+          res.send(success('update one document'));
+        },
+      );
+    },
+  );
 });
 
 // app.get('/upload', async (req, res) => {
