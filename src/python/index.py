@@ -34,7 +34,7 @@ MYDIR = os.path.dirname(__file__)
 VARIABLE_DETECT = 0.3
 
 model_detect = cPickle.load(open('./model_detect.sav', 'rb'))
-model_regconize = cPickle.load(open('./model_LinearSVC_9.sav', 'rb'))
+model_regconize = cPickle.load(open('./model_recognize.sav', 'rb'))
 
 
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
