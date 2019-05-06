@@ -2,3 +2,5 @@ node_modules/
 *.pyc
 # *.pickle
 package-lock.json
+src/python/upload/*
+src/python/crop/upload/*
