@@ -19,10 +19,8 @@ import json
 import pymongo
 from bson.json_util import dumps
 import time
-
-
 import base64
-
+from sklearn.metrics.pairwise import cosine_similarity
 
 app = Flask(__name__)
 
@@ -37,10 +35,35 @@ model_detect = cPickle.load(open('./model_detect.sav', 'rb'))
 model_regconize = cPickle.load(open('./model_recognize.sav', 'rb'))
 
 
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-mydb = myclient["flower"]
-mycol = mydb["collection_flower_detail"]
+# myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+# mydb = myclient["flower"]
+# mycol = mydb["collection_flower_detail"]
 
+
+def load_all_feature(path):
+    print("Load feature" + path)
+    all_feature = cPickle.load(open(path, "rb"))
+    all_feature_norm = normalize(all_feature, norm='l2')
+    return all_feature_norm
+
+
+def load_list_image(index,type_of_flower):
+        list_image = []
+        type_of_flower = str (type_of_flower)
+        with open('./list_image_102/'+type_of_flower+'.txt', "r") as all_Label_file:
+                for target_list in all_Label_file:
+                        list_image.append(target_list.rstrip())
+        return list_image[index]
+
+def similarity(X,type_of_flower):
+    type_of_flower = str (type_of_flower)
+    X = X.reshape(1,-1)
+    Y = np.array(load_all_feature('./feature_flower_102/'+type_of_flower+'.pickle'))
+
+    cosin_array = cosine_similarity(X,Y)
+    maxElement = np.argmax(cosin_array)
+    print(maxElement)
+    return maxElement
 
 def get_feature_1_image(image_name):
     img_path = image_name
@@ -54,6 +77,7 @@ def get_feature_1_image(image_name):
 
     features_norm = normalize(features, norm='l2')
     return features_norm
+
 
 
 def add_image_to_mongo(image_name, device_id, flower_recognize):
@@ -109,17 +133,25 @@ def predict():
                      np.where(result_table == result_sort[2])[0][0]+1,
                      np.where(result_table == result_sort[3])[0][0]+1,
                      np.where(result_table == result_sort[4])[0][0]+1]
+            # label = [1,3,5,8,102]
 
             arr_flower = []
 
             for item in label:
-                mongo_item = mycol.find_one(
-                    {'index': item}, {"_id": 0, "detail": 0})
-                arr_flower.append(json.loads(dumps(mongo_item)))
+                # mongo_item = mycol.find_one(
+                #     {'index': item}, {"_id": 0, "detail": 0})
+
+                # data = json.loads(dumps(mongo_item))
+                # data = {label: item}
+                index_similarity = similarity(feature_image_upload,item)
+                image = load_list_image(index_similarity,item)
+                arr_flower.append([image,item])
+
+                print(arr_flower)
 
             # print(arr_flower)
 
-            add_image_to_mongo(image_name, device_id, arr_flower)
+            # add_image_to_mongo(image_name, device_id, arr_flower)
             print(label)
             return jsonify(status="success",
                            data=arr_flower,
