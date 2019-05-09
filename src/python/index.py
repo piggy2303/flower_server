@@ -19,10 +19,12 @@ import json
 import pymongo
 from bson.json_util import dumps
 import time
-
-
 import base64
+from sklearn.metrics.pairwise import cosine_similarity
 
+import cv2
+from PIL import Image
+# import os
 
 app = Flask(__name__)
 
@@ -42,6 +44,80 @@ mydb = myclient["flower"]
 mycol = mydb["collection_flower_detail"]
 
 
+def foreground_detect(img_path):
+        # ham nay dung de tao ra mot mask cho anh
+        img = cv2.imread(img_path)
+
+        img_height = img.shape[0]
+        img_width = img.shape[1]
+
+        start_width = int( img_width/10)
+        start_height = int(img_height/10)
+        rect_width = int(img_width*0.8)
+        rect_height = int(img_height*0.8)
+
+        mask = np.zeros(img.shape[:2],np.uint8)
+
+        bgdModel = np.zeros((1,65),np.float64)
+        fgdModel = np.zeros((1,65),np.float64)
+
+        rect = (start_width,start_height,rect_width,rect_height)
+
+        cv2.grabCut(img,mask,rect,bgdModel,fgdModel,5,cv2.GC_INIT_WITH_RECT)
+        mask2 = np.where((mask==2)|(mask==0),0,1).astype('uint8')
+
+        return mask2,img_height,img_width
+
+def find_4_angle(mask2,img_height,img_width):
+        # ham nay dung de lay ra 4 canh left,right,top,bottom cua mask
+        result_left = []
+        result_top = []
+        result_right = []
+        for i in range(0,img_height,1):
+                for j in range(0,img_width,1):
+                        if mask2[i][j] != 0:
+                                result_top.append(i)
+                                result_left.append(j)
+                                break
+        for i in range(0,img_height,1):
+                for j in range(img_width-1,-1,-1):
+                        if mask2[i][j] != 0:
+                                result_right.append(j)
+                                break
+        return min(result_left),min(result_top),max(result_right),max(result_top)
+
+
+def crop_image(img_path):
+        print(img_path)
+        mask2,img_height,img_width =  foreground_detect(img_path)
+        area = find_4_angle(mask2,img_height,img_width)
+        img = Image.open(img_path)
+        cropped_img = img.crop(area)
+        cropped_img.save("./crop/"+img_path)
+        return "./crop/"+img_path
+
+
+def load_all_feature(path):
+    print("Load feature" + path)
+    all_feature = cPickle.load(open(path, "rb"))
+    all_feature_norm = normalize(all_feature, norm='l2')
+    return all_feature_norm
+
+
+def similarity(X,type_of_flower):
+        type_of_flower = str (type_of_flower)
+        X = X.reshape(1,-1)
+        Y = np.array(load_all_feature('./feature_flower_102/'+type_of_flower+'.pickle'))
+
+        cosin_array = cosine_similarity(X,Y)
+        maxElement = np.argmax(cosin_array)
+        list_image = []
+        with open('./list_image_102/'+type_of_flower+'.txt', "r") as all_Label_file:
+                for target_list in all_Label_file:
+                        list_image.append(target_list.rstrip())
+        return list_image[maxElement]
+
+
 def get_feature_1_image(image_name):
     img_path = image_name
     img = image.load_img(img_path, target_size=(224, 224))
@@ -54,6 +130,7 @@ def get_feature_1_image(image_name):
 
     features_norm = normalize(features, norm='l2')
     return features_norm
+
 
 
 def add_image_to_mongo(image_name, device_id, flower_recognize):
@@ -91,6 +168,9 @@ def predict():
             f.write(imgdata)
         print("save image success")
 
+        # crop_image by foreground detect
+        path_image_name = crop_image(path_image_name)
+
         # get get feature image upload
         feature_image_upload = get_feature_1_image(path_image_name)
 
@@ -109,13 +189,19 @@ def predict():
                      np.where(result_table == result_sort[2])[0][0]+1,
                      np.where(result_table == result_sort[3])[0][0]+1,
                      np.where(result_table == result_sort[4])[0][0]+1]
+            # label = [1,3,5,8,102]
 
             arr_flower = []
 
             for item in label:
                 mongo_item = mycol.find_one(
                     {'index': item}, {"_id": 0, "detail": 0})
-                arr_flower.append(json.loads(dumps(mongo_item)))
+
+                data = json.loads(dumps(mongo_item))
+                data['list_image'] =[similarity(feature_image_upload,item)] 
+                arr_flower.append(data)
+
+                print(arr_flower)
 
             # print(arr_flower)
 
